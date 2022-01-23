@@ -57,46 +57,6 @@ func GetUserHandler(c *fiber.Ctx) error {
 }
 
 /*
-GetMe |
-@Desc: Get me by jwt token |
-@Method: GET |
-@Route: "api/v1/users/me" |
-@Middleware: Authenticate
-@Auth: Private
-*/
-func GetMe(c *fiber.Ctx) error {
-	userID := c.Locals("userID")
-	token := c.Locals("authToken")
-	if userID == nil || token == nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": "missing local"})
-	}
-
-	if !models.CheckForToken(database.DBPool, userID.(string), token.(string)) {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": "token not on user"})
-	}
-
-	user, err := models.GetUserByID(database.DBPool, userID.(string))
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
-	}
-
-	jwtToken, err := utils.CreateJWTToken(user.ID)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
-	}
-
-	user.Tokens = append(user.Tokens, jwtToken)
-	updatedUser, err := models.UpdateUserTokens(database.DBPool, *user)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
-	}
-
-	utils.SendAuthCookie(c, jwtToken)
-
-	return c.Status(201).JSON(fiber.Map{"success": true, "data": updatedUser})
-}
-
-/*
 CreateUser |
 @Desc: Create new user |
 @Method: POST |
