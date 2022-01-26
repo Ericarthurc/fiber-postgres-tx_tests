@@ -26,7 +26,7 @@ func DbConnect() {
 
 	_, err = DBPool.Exec(context.Background(), `CREATE TABLE IF NOT EXISTS SERVICES (
 		id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-		date TIMESTAMPTZ NOT NULL,
+		time TIMESTAMPTZ NOT NULL,
 		seats INTEGER NOT NULL
 	)`)
 	if err != nil {
@@ -38,9 +38,9 @@ func DbConnect() {
 		id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
 		name TEXT NOT NULL,
 		email TEXT NOT NULL UNIQUE,
-		seats INTEGER NOT NULL CHECK (seats >= 1 AND seats <= 10),
-		serviceDate TEXT NOT NULL,
-		serviceId TEXT NOT NULL
+		userseats INTEGER NOT NULL CHECK (userseats >= 1 AND userseats <= 10),
+		servicetime TIMESTAMPTZ NOT NULL,
+		serviceid TEXT NOT NULL
 	)`)
 	if err != nil {
 		fmt.Println(err.Error())

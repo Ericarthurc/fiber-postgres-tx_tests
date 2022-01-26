@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"eric/database"
+	"eric/models"
 	"fmt"
 	"os"
 
+	"github.com/georgysavva/scany/pgxscan"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v4"
 	"github.com/joho/godotenv"
@@ -27,8 +29,6 @@ func main() {
 	// app.Static("/", "dist")
 
 	app.Post("/item", CreateItemHandler)
-
-	// app.Patch("/item")
 
 	// app.Get("/*", func(ctx *fiber.Ctx) error {
 	// 	return ctx.SendFile("./dist/index.html")
@@ -60,40 +60,49 @@ func CreateItemHandler(c *fiber.Ctx) error {
 	}()
 
 	// parse body to map
-	var databody map[string]interface{}
-	err = c.BodyParser(&databody)
-	if err != nil {
-		return err
-	}
-
-	// parse body to custom struct shaped to json
-	// var databody struct {
-	// 	Item  models.Item `json:"item"`
-	// 	User  models.User `json:"user"`
-	// 	Token string      `json:"token"`
-	// }
-	// userBody := &databody.User
-	// itemBody := &databody.Item
-
+	// var databody map[string]interface{}
 	// err = c.BodyParser(&databody)
 	// if err != nil {
 	// 	return err
 	// }
 
-	// fmt.Println(databody.Token)
+	// parse body to custom struct shaped to json
+	var databody struct {
+		Service models.Service `json:"service"`
+		User    models.User    `json:"user"`
+		Token   string         `json:"token"`
+	}
+	userBody := &databody.User
+	serviceBody := &databody.Service
 
-	// var item models.Item
-	// err = pgxscan.Get(context.Background(), tx, &item, "INSERT INTO items (product, manufacturer, device_type, serial, condition, year) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *", &itemBody.Product, &itemBody.Manufacturer, &itemBody.DeviceType, &itemBody.Serial, &itemBody.Condition, &itemBody.Year)
-	// if err != nil {
-	// 	return err
-	// }
+	err = c.BodyParser(&databody)
+	if err != nil {
+		return err
+	}
 
-	// var user models.User
-	// err = pgxscan.Get(context.Background(), tx, &user, "INSERT INTO users (username, password, role) VALUES ($1, $2, $3) RETURNING *", &userBody.Username, &userBody.Password, &userBody.Role)
-	// if err != nil {
-	// 	return err
-	// }
+	fmt.Println(userBody)
+	fmt.Println(serviceBody)
 
-	// return c.Status(201).JSON(fiber.Map{"success": true, "item": item, "user": user})
-	return c.Status(201).JSON(fiber.Map{"success": true})
+	var service models.Service
+	err = pgxscan.Get(context.Background(), tx, &service, "INSERT INTO services (time, seats) VALUES ($1, $2) RETURNING *", &serviceBody.Time, &serviceBody.Seats)
+	if err != nil {
+		return err
+	}
+
+	userBody.Servicetime = service.Time
+	userBody.Serviceid = service.ID
+
+	fmt.Println(userBody)
+
+	var user models.User
+	err = pgxscan.Get(context.Background(), tx, &user, "INSERT INTO users (name, email, userseats, servicetime, serviceid) VALUES ($1, $2, $3, $4, $5) RETURNING *", &userBody.Name, &userBody.Email, &userBody.Userseats, &userBody.Servicetime, &userBody.Serviceid)
+	if err != nil {
+		fmt.Println("here")
+		return err
+	}
+
+	fmt.Println(user)
+
+	return c.Status(201).JSON(fiber.Map{"success": true, "service": service, "user": user})
+	// return c.Status(201).JSON(fiber.Map{"success": true})
 }

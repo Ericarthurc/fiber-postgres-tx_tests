@@ -2,17 +2,17 @@ package models
 
 import (
 	"context"
+	"time"
 
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/google/uuid"
-	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type Service struct {
-	ID    uuid.UUID   `json:"id"`
-	Date  pgtype.Date `json:"date"`
-	Seats string      `json:"manufacturer"`
+	ID    uuid.UUID `json:"id"`
+	Time  time.Time `json:"time"`
+	Seats int       `json:"seats"`
 }
 
 func GetServices(db *pgxpool.Pool) ([]Service, error) {

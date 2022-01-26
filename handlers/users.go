@@ -1,198 +1,188 @@
 package handlers
 
-import (
-	"eric/database"
-	"eric/models"
-	"eric/utils"
-	"errors"
+// /*
+// getUserByCredentials |
+// @Desc: calls models.GetUserByUsername() and then checks passwords for unhashed match
+// */
+// func getUserByCredentials(c *fiber.Ctx, username string, password string) (*models.User, error) {
+// 	user, err := models.GetUserByUsername(database.DBPool, username)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
-)
+// 	if !utils.CheckPasswordHash(password, user.Password) {
+// 		return nil, errors.New("password incorrect")
+// 	}
+// 	return user, nil
+// }
 
-/*
-getUserByCredentials |
-@Desc: calls models.GetUserByUsername() and then checks passwords for unhashed match
-*/
-func getUserByCredentials(c *fiber.Ctx, username string, password string) (*models.User, error) {
-	user, err := models.GetUserByUsername(database.DBPool, username)
-	if err != nil {
-		return nil, err
-	}
+// /*
+// GetUsers |
+// @Desc: Get all users |
+// @Method: GET |
+// @Route: "api/v1/users" |
+// @Auth: Public
+// */
+// func GetUsersHandler(c *fiber.Ctx) error {
+// 	var err error
+// 	if err != nil {
+// 		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
+// 	}
+// 	return c.Status(201).JSON(fiber.Map{"success": true, "data": nil})
+// }
 
-	if !utils.CheckPasswordHash(password, user.Password) {
-		return nil, errors.New("password incorrect")
-	}
-	return user, nil
-}
+// /*
+// GetUser |
+// @Desc: Get user by id |
+// @Method: GET |
+// @Route: "api/v1/users/:id" |
+// @Auth: Public
+// */
+// func GetUserHandler(c *fiber.Ctx) error {
+// 	var err error
+// 	if err != nil {
+// 		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
+// 	}
+// 	return c.Status(201).JSON(fiber.Map{"success": true, "data": nil})
+// }
 
-/*
-GetUsers |
-@Desc: Get all users |
-@Method: GET |
-@Route: "api/v1/users" |
-@Auth: Public
-*/
-func GetUsersHandler(c *fiber.Ctx) error {
-	var err error
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
-	}
-	return c.Status(201).JSON(fiber.Map{"success": true, "data": nil})
-}
+// /*
+// CreateUser |
+// @Desc: Create new user |
+// @Method: POST |
+// @Route: "api/v1/users" |
+// @Middleware: Authenticate
+// @Auth: Private
+// */
+// func CreateUserHandler(c *fiber.Ctx) error {
+// 	var userBody models.User
 
-/*
-GetUser |
-@Desc: Get user by id |
-@Method: GET |
-@Route: "api/v1/users/:id" |
-@Auth: Public
-*/
-func GetUserHandler(c *fiber.Ctx) error {
-	var err error
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
-	}
-	return c.Status(201).JSON(fiber.Map{"success": true, "data": nil})
-}
+// 	err := c.BodyParser(&userBody)
+// 	if err != nil {
+// 		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
+// 	}
 
-/*
-CreateUser |
-@Desc: Create new user |
-@Method: POST |
-@Route: "api/v1/users" |
-@Middleware: Authenticate
-@Auth: Private
-*/
-func CreateUserHandler(c *fiber.Ctx) error {
-	var userBody models.User
+// 	id := uuid.New()
+// 	jwtToken, err := utils.CreateJWTToken(id.String())
+// 	if err != nil {
+// 		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
+// 	}
 
-	err := c.BodyParser(&userBody)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
-	}
+// 	userBody.ID = id.String()
+// 	userBody.Tokens = append(userBody.Tokens, jwtToken)
 
-	id := uuid.New()
-	jwtToken, err := utils.CreateJWTToken(id.String())
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
-	}
+// 	hashedPassword, err := utils.HashPassword(userBody.Password)
+// 	if err != nil {
+// 		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
+// 	}
+// 	userBody.Password = hashedPassword
 
-	userBody.ID = id.String()
-	userBody.Tokens = append(userBody.Tokens, jwtToken)
+// 	createdUser, err := models.CreateUser(database.DBPool, userBody)
+// 	if err != nil {
+// 		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
+// 	}
 
-	hashedPassword, err := utils.HashPassword(userBody.Password)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
-	}
-	userBody.Password = hashedPassword
+// 	utils.SendAuthCookie(c, jwtToken)
 
-	createdUser, err := models.CreateUser(database.DBPool, userBody)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
-	}
+// 	return c.Status(201).JSON(fiber.Map{"success": true, "data": createdUser})
+// }
 
-	utils.SendAuthCookie(c, jwtToken)
+// /*
+// LoginUser |
+// @Desc: Login user by username and password |
+// @Method: POST |
+// @Route: "api/v1/users/login" |
+// @Auth: Public
+// */
+// func LoginUserHandler(c *fiber.Ctx) error {
+// 	var userBody models.User
 
-	return c.Status(201).JSON(fiber.Map{"success": true, "data": createdUser})
-}
+// 	err := c.BodyParser(&userBody)
+// 	if err != nil {
+// 		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
+// 	}
 
-/*
-LoginUser |
-@Desc: Login user by username and password |
-@Method: POST |
-@Route: "api/v1/users/login" |
-@Auth: Public
-*/
-func LoginUserHandler(c *fiber.Ctx) error {
-	var userBody models.User
+// 	if userBody.Password == "" {
+// 		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "no password entered", "data": nil})
+// 	}
 
-	err := c.BodyParser(&userBody)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
-	}
+// 	unhashedUser, err := getUserByCredentials(c, userBody.Username, userBody.Password)
+// 	if unhashedUser == nil || err != nil {
+// 		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
+// 	}
 
-	if userBody.Password == "" {
-		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "no password entered", "data": nil})
-	}
+// 	jwtToken, err := utils.CreateJWTToken(unhashedUser.ID)
+// 	if err != nil {
+// 		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
+// 	}
 
-	unhashedUser, err := getUserByCredentials(c, userBody.Username, userBody.Password)
-	if unhashedUser == nil || err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
-	}
+// 	unhashedUser.Tokens = append(unhashedUser.Tokens, jwtToken)
+// 	updatedUser, err := models.UpdateUserTokens(database.DBPool, *unhashedUser)
+// 	if err != nil {
+// 		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
+// 	}
 
-	jwtToken, err := utils.CreateJWTToken(unhashedUser.ID)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
-	}
+// 	utils.SendAuthCookie(c, jwtToken)
 
-	unhashedUser.Tokens = append(unhashedUser.Tokens, jwtToken)
-	updatedUser, err := models.UpdateUserTokens(database.DBPool, *unhashedUser)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
-	}
+// 	return c.Status(201).JSON(fiber.Map{"success": true, "data": updatedUser})
+// }
 
-	utils.SendAuthCookie(c, jwtToken)
+// /*
+// LogoutUser |
+// @Desc: Logout user |
+// @Method: POST |
+// @Route: "api/v1/users/logout" |
+// @Middleware: Authenticate
+// @Auth: Private
+// */
+// func LogoutUserHandler(c *fiber.Ctx) error {
 
-	return c.Status(201).JSON(fiber.Map{"success": true, "data": updatedUser})
-}
+// 	userID := c.Locals("userID")
+// 	token := c.Locals("authToken")
+// 	if userID == nil || token == nil {
+// 		return c.Status(500).JSON(fiber.Map{"success": false, "data": "missing local"})
+// 	}
 
-/*
-LogoutUser |
-@Desc: Logout user |
-@Method: POST |
-@Route: "api/v1/users/logout" |
-@Middleware: Authenticate
-@Auth: Private
-*/
-func LogoutUserHandler(c *fiber.Ctx) error {
+// 	if !models.CheckForToken(database.DBPool, userID.(string), token.(string)) {
+// 		return c.Status(500).JSON(fiber.Map{"success": false, "data": "token not on user"})
+// 	}
 
-	userID := c.Locals("userID")
-	token := c.Locals("authToken")
-	if userID == nil || token == nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": "missing local"})
-	}
+// 	err := models.LogoutUser(database.DBPool, userID.(string), token.(string))
+// 	if err != nil {
+// 		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
+// 	}
 
-	if !models.CheckForToken(database.DBPool, userID.(string), token.(string)) {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": "token not on user"})
-	}
+// 	c.ClearCookie("authToken")
 
-	err := models.LogoutUser(database.DBPool, userID.(string), token.(string))
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
-	}
+// 	return c.Status(201).JSON(fiber.Map{"success": true, "data": "user logged out"})
+// }
 
-	c.ClearCookie("authToken")
+// /*
+// UpdateUser |
+// @Desc: Update user by id |
+// @Method: PUT |
+// @Route: "api/v1/users/:id" |
+// @Auth: Private
+// */
+// func UpdateUserHandler(c *fiber.Ctx) error {
+// 	var err error
+// 	if err != nil {
+// 		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
+// 	}
+// 	return c.Status(201).JSON(fiber.Map{"success": true, "data": nil})
+// }
 
-	return c.Status(201).JSON(fiber.Map{"success": true, "data": "user logged out"})
-}
-
-/*
-UpdateUser |
-@Desc: Update user by id |
-@Method: PUT |
-@Route: "api/v1/users/:id" |
-@Auth: Private
-*/
-func UpdateUserHandler(c *fiber.Ctx) error {
-	var err error
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
-	}
-	return c.Status(201).JSON(fiber.Map{"success": true, "data": nil})
-}
-
-/*
-DeleteUser |
-@Desc: Delete user by id |
-@Method: DELETE |
-@Route: "api/v1/users/:id" |
-@Auth: Private
-*/
-func DeleteUserHandler(c *fiber.Ctx) error {
-	var err error
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
-	}
-	return c.Status(201).JSON(fiber.Map{"success": true, "data": nil})
-}
+// /*
+// DeleteUser |
+// @Desc: Delete user by id |
+// @Method: DELETE |
+// @Route: "api/v1/users/:id" |
+// @Auth: Private
+// */
+// func DeleteUserHandler(c *fiber.Ctx) error {
+// 	var err error
+// 	if err != nil {
+// 		return c.Status(500).JSON(fiber.Map{"success": false, "data": err.Error()})
+// 	}
+// 	return c.Status(201).JSON(fiber.Map{"success": true, "data": nil})
+// }
